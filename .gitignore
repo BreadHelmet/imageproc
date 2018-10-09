@@ -37,3 +37,6 @@
 #copy protected image(s)
 images/*
 !images/.gitkeep
+
+# executable
+main

@@ -1,21 +1,14 @@
 
-#include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-
-#include <cmath>
-#include <limits>
 #include <math.h>
-
 #include <png.h>
 
-void plot_point(unsigned char* imageb, unsigned w, unsigned x, unsigned y)
+void plot_point(unsigned char* imageb, const unsigned &w, const unsigned &x, const unsigned &y)
 {
     imageb[y*w + x] = 255;
 }
 
-void line(int x0, int y0, int x1, int y1, unsigned char* b, int w)
+void line(int x0, int y0, int x1, int y1, unsigned char* b, const int &w)
 {
     int dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
     int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1; 
@@ -30,9 +23,9 @@ void line(int x0, int y0, int x1, int y1, unsigned char* b, int w)
     }
 }
 
-void draw_histograms(unsigned char* buffer, int w, float (&hogfv)[6156])
+void draw_hogfv(unsigned char* buffer, const int &w, const float (&hogfv)[6156])
 {
-    float line_length = 8;
+    float line_length = 6;
 
     float angl_per_bin = M_PI / 9;
 
@@ -162,33 +155,11 @@ void make_hogfv(float (&hist)[1800], float (&vec)[6156])
     }
 }
 
-void resize(unsigned char* in, int inw, int inh, unsigned char* out, int outw, int outh)
-{
-    for(unsigned y=0;y<outh;++y){
-        for(unsigned x=0;x<outw;++x){
-            unsigned outi = y*outw + x;
-            float inx = inw*(float)x/outw;
-            float iny = inh*(float)y/outh;
-
-            
-
-            unsigned ini = (int)iny*inw + (int)inx;//(float)(y)/outh*inh*inw + (float)(x)/outw*inw;
-
-            printf("ini:%i, outi:%i", ini, outi);
-            // return;
-
-            out[outi] = in[ini];
-        }
-    }
-}
-
 int main()
 {
     png_image img;
     memset(&img, 0, (sizeof img));
     img.version = PNG_IMAGE_VERSION;
-
-    
 
     png_image out;
     memset(&out, 0, sizeof(out));
@@ -197,15 +168,15 @@ int main()
     if(png_image_begin_read_from_file(&img, "images/pedestrian.png"))
     {
         img.format = PNG_FORMAT_GRAY;
-        // img.opaque = NULL;
         
         png_bytep buffer;
         size_t buffer_size = PNG_IMAGE_SIZE( img );
         buffer = (unsigned char*)malloc( buffer_size );
 
         out.format = PNG_FORMAT_GRAY;
-        out.width = img.width*2;
-        out.height = img.height*2;        
+        out.format = img.format;
+        out.width = img.width;
+        out.height = img.height;
         out.flags = 0;
         // out.colormap_entries = 256;
         out.opaque = NULL;
@@ -215,7 +186,6 @@ int main()
         size_t out_buffer_size PNG_IMAGE_SIZE( out );
         out_buffer = (unsigned char*)malloc( out_buffer_size );
 
-        /*
         float gx[20000];
         memset(gx,0,sizeof(gx));
 
@@ -234,25 +204,19 @@ int main()
         // HOG Feature Vector, 36 x 9 x 19
         float vec[6156];
         memset(vec,0,sizeof(vec));
-        */
 
         if(buffer != NULL && png_image_finish_read( &img, NULL, buffer, 0, NULL )){
 
-            /*            
             calc_gx(gx,buffer,img.width,img.height);
             calc_gy(gy,buffer,img.width,img.height);
             calc_dir(dir,mag,gx,gy,img.width,img.height);
             make_histograms(his,dir,mag,img.width,img.height);
             make_hogfv(his, vec);
-            draw_histograms(buffer, img.width, vec);
-            */
-            
-            resize(buffer, img.width, img.height, out_buffer, out.width, out.height);
+            draw_hogfv(out_buffer, img.width, vec);
 
             bool success = true;
-            success = success && png_image_write_to_file( &img, "images/orig.png", 0, buffer, 0, NULL);
-
-            success = success && png_image_write_to_file( &out, "images/resized.png", 0, out_buffer, 0, NULL);
+            //success = success && png_image_write_to_file( &img, "images/orig.png", 0, buffer, 0, NULL);
+            success = success && png_image_write_to_file( &out, "images/out.png", 0, out_buffer, 0, NULL);
 
             if(success){
                 exit(EXIT_SUCCESS);

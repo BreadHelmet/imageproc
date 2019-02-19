@@ -207,16 +207,14 @@ int main()
 
         if(buffer != NULL && png_image_finish_read( &img, NULL, buffer, 0, NULL )){
 
-            calc_gx(gx,buffer,img.width,img.height);
-            calc_gy(gy,buffer,img.width,img.height);
-            calc_dir(dir,mag,gx,gy,img.width,img.height);
-            make_histograms(his,dir,mag,img.width,img.height);
+            calc_gx(gx, buffer, img.width, img.height);
+            calc_gy(gy, buffer, img.width, img.height);
+            calc_dir(dir, mag, gx, gy, img.width, img.height);
+            make_histograms(his, dir, mag, img.width, img.height);
             make_hogfv(his, vec);
             draw_hogfv(out_buffer, img.width, vec);
 
-            bool success = true;
-            //success = success && png_image_write_to_file( &img, "images/orig.png", 0, buffer, 0, NULL);
-            success = success && png_image_write_to_file( &out, "images/out.png", 0, out_buffer, 0, NULL);
+            bool success = true && png_image_write_to_file( &out, "images/out.png", 0, out_buffer, 0, NULL);
 
             if(success){
                 exit(EXIT_SUCCESS);

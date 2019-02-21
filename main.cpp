@@ -3,6 +3,11 @@
 #include <math.h>
 #include <png.h>
 
+#ifdef _DEBUG
+#include <iostream>
+#endif // _DEBUG
+
+#ifdef _DEBUG
 void plot_point(unsigned char* imageb, const unsigned &w, const unsigned &x, const unsigned &y)
 {
     imageb[y*w + x] = 255;
@@ -22,7 +27,9 @@ void line(int x0, int y0, int x1, int y1, unsigned char* b, const int &w)
         if (e2 < dy) { err += dx; y0 += sy; }
     }
 }
+#endif // _DEBUG
 
+#ifdef _DEBUG
 void draw_hogfv(unsigned char* buffer, const int &w, const float (&hogfv)[6156])
 {
     float line_length = 6;
@@ -56,6 +63,15 @@ void draw_hogfv(unsigned char* buffer, const int &w, const float (&hogfv)[6156])
         }
     }
 }
+#endif // _DEBUG
+
+#ifdef _DEBUG
+void float_to_char_buffer(unsigned char* buffer, float (&precision_buffer)[20000])
+{
+    for(unsigned i=0;i<20000;++i)
+        buffer[i] = (char)precision_buffer[i];
+}
+#endif // _DEBUG
 
 void make_histograms(float (&his)[1800],const float (&dir)[20000],const float (&mag)[20000],const unsigned int &width, const unsigned int &height)
 {
@@ -157,13 +173,43 @@ void make_hogfv(float (&hist)[1800], float (&vec)[6156])
 
 int main()
 {
+    // g++ -D _DEBUG -c main.cpp;g++ -o line_detect.out main.o -lpng
+
+    #ifdef _DEBUG
+    std::cout << "_DEBUG flag defined." << std::endl;
+    #endif // _DEBUG
+
     png_image img;
     memset(&img, 0, (sizeof img));
     img.version = PNG_IMAGE_VERSION;
-
+    
+    #ifdef _DEBUG
+    // HOG visualization
     png_image out;
     memset(&out, 0, sizeof(out));
     out.version = PNG_IMAGE_VERSION;
+
+    // x gradient
+    png_image xg_img;
+    memset(&xg_img, 0, (sizeof xg_img ));
+    xg_img.version = PNG_IMAGE_VERSION;
+
+    // y gradient
+    png_image yg_img;
+    memset(&yg_img, 0, (sizeof yg_img ));
+    yg_img.version = PNG_IMAGE_VERSION;
+
+    // direction of gradient
+    png_image dir_img;
+    memset(&dir_img, 0, (sizeof dir_img ));
+    dir_img.version = PNG_IMAGE_VERSION;
+
+    // magnitude of gradient
+    png_image mag_img;
+    memset(&mag_img, 0, (sizeof mag_img ));
+    mag_img.version = PNG_IMAGE_VERSION;
+
+    #endif // _DEBUG
     
     if(png_image_begin_read_from_file(&img, "images/pedestrian.png"))
     {
@@ -173,6 +219,7 @@ int main()
         size_t buffer_size = PNG_IMAGE_SIZE( img );
         buffer = (unsigned char*)malloc( buffer_size );
 
+        #ifdef _DEBUG
         out.format = PNG_FORMAT_GRAY;
         out.format = img.format;
         out.width = img.width;
@@ -183,8 +230,71 @@ int main()
         out.warning_or_error = 0;
 
         png_bytep out_buffer;
-        size_t out_buffer_size PNG_IMAGE_SIZE( out );
+        size_t out_buffer_size = PNG_IMAGE_SIZE( out );
         out_buffer = (unsigned char*)malloc( out_buffer_size );
+
+
+
+        xg_img.format = PNG_FORMAT_GRAY;
+        xg_img.format = img.format;
+        xg_img.width = img.width;
+        xg_img.height = img.height;
+        xg_img.flags = 0;
+        // xg_img.colormap_entries = 256;
+        xg_img.opaque = NULL;
+        xg_img.warning_or_error = 0;
+
+        png_bytep xg_img_buffer;
+        size_t xg_img_buffer_size = PNG_IMAGE_SIZE( xg_img );
+        xg_img_buffer = (unsigned char*)malloc( xg_img_buffer_size );
+
+
+
+        yg_img.format = PNG_FORMAT_GRAY;
+        yg_img.format = img.format;
+        yg_img.width = img.width;
+        yg_img.height = img.height;
+        yg_img.flags = 0;
+        // yg_img.colormap_entries = 256;
+        yg_img.opaque = NULL;
+        yg_img.warning_or_error = 0;
+
+        png_bytep yg_img_buffer;
+        size_t yg_img_buffer_size = PNG_IMAGE_SIZE( yg_img );
+        yg_img_buffer = (unsigned char*)malloc( yg_img_buffer_size );
+
+
+
+        dir_img.format = PNG_FORMAT_GRAY;
+        dir_img.format = img.format;
+        dir_img.width = img.width;
+        dir_img.height = img.height;
+        dir_img.flags = 0;
+        // dir_img.colormap_entries = 256;
+        dir_img.opaque = NULL;
+        dir_img.warning_or_error = 0;
+
+        png_bytep dir_img_buffer;
+        size_t dir_img_buffer_size = PNG_IMAGE_SIZE( dir_img );
+        dir_img_buffer = (unsigned char*)malloc( dir_img_buffer_size );
+
+
+
+        mag_img.format = PNG_FORMAT_GRAY;
+        mag_img.format = img.format;
+        mag_img.width = img.width;
+        mag_img.height = img.height;
+        mag_img.flags = 0;
+        // mag_img.colormap_entries = 256;
+        mag_img.opaque = NULL;
+        mag_img.warning_or_error = 0;
+
+        png_bytep mag_img_buffer;
+        size_t mag_img_buffer_size = PNG_IMAGE_SIZE( mag_img );
+        mag_img_buffer = (unsigned char*)malloc( mag_img_buffer_size );
+
+        #endif // _DEBUG
+        
 
         float gx[20000];
         memset(gx,0,sizeof(gx));
@@ -208,13 +318,36 @@ int main()
         if(buffer != NULL && png_image_finish_read( &img, NULL, buffer, 0, NULL )){
 
             calc_gx(gx, buffer, img.width, img.height);
+            #ifdef _DEBUG
+            float_to_char_buffer( xg_img_buffer, gx );
+            #endif // _DEBUG
+
             calc_gy(gy, buffer, img.width, img.height);
+            #ifdef _DEBUG
+            float_to_char_buffer( yg_img_buffer, gy );
+            #endif // _DEBUG
+
             calc_dir(dir, mag, gx, gy, img.width, img.height);
+            #ifdef _DEBUG
+            float_to_char_buffer( dir_img_buffer, dir );
+            float_to_char_buffer( mag_img_buffer, mag );
+            #endif // _DEBUG
+
             make_histograms(his, dir, mag, img.width, img.height);
             make_hogfv(his, vec);
+            #ifdef _DEBUG
             draw_hogfv(out_buffer, img.width, vec);
+            #endif // _DEBUG
 
-            bool success = true && png_image_write_to_file( &out, "images/out.png", 0, out_buffer, 0, NULL);
+            bool success = true;
+            
+            #ifdef _DEBUG
+            success = success && png_image_write_to_file( &out, "images/out.png", 0, out_buffer, 0, NULL );
+            success = success && png_image_write_to_file( &xg_img, "images/x_gradient.png", 0, xg_img_buffer, 0, NULL );
+            success = success && png_image_write_to_file( &xg_img, "images/y_gradient.png", 0, yg_img_buffer, 0, NULL );
+            success = success && png_image_write_to_file( &dir_img, "images/dir.png", 0, dir_img_buffer, 0, NULL );
+            success = success && png_image_write_to_file( &mag_img, "images/mag.png", 0, mag_img_buffer, 0, NULL );
+            #endif // _DEBUG
 
             if(success){
                 exit(EXIT_SUCCESS);
@@ -228,15 +361,50 @@ int main()
                 free( buffer );
             }
 
-            if( buffer == NULL ){
+            #ifdef _DEBUG
+
+            if( out_buffer == NULL ){
                 png_image_free( &out );
             }else{
                 free( out_buffer );
             }
+
+            if( xg_img_buffer == NULL ){
+                png_image_free( &xg_img );
+            }else{
+                free( xg_img_buffer );
+            }
+
+            if( yg_img_buffer == NULL ){
+                png_image_free( &yg_img );
+            }else{
+                free( yg_img_buffer );
+            }
+
+            if( dir_img_buffer == NULL ){
+                png_image_free( &dir_img );
+            }else{
+                free( dir_img_buffer );
+            }
+
+            if( mag_img_buffer == NULL ){
+                png_image_free( &mag_img );
+            }else{
+                free( mag_img_buffer );
+            }
+
+            #endif // _DEBUG
+
         }
     }
 
     fprintf(stderr, "error:%s\n", img.message);
+    #ifdef _DEBUG
     fprintf(stderr, "error:%s\n", out.message);
+    fprintf(stderr, "error:%s\n", xg_img.message);
+    fprintf(stderr, "error:%s\n", yg_img.message);
+    fprintf(stderr, "error:%s\n", dir_img.message);
+    fprintf(stderr, "error:%s\n", mag_img.message);
+    #endif // _DEBUG
     exit(EXIT_FAILURE);
 }

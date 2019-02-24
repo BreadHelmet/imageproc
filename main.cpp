@@ -3,6 +3,9 @@
 #include <math.h>
 #include <png.h>
 
+#include <sys/stat.h>
+#include <string>
+
 #ifdef _DEBUG
 #include <iostream>
 #endif // _DEBUG
@@ -171,7 +174,13 @@ void make_hogfv(float (&hist)[1800], float (&vec)[6156])
     }
 }
 
-int main()
+inline bool file_exist(const std::string& name)
+{
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0); 
+}
+
+int main(int argc, char** argv)
 {
     // g++ -D _DEBUG -c main.cpp;g++ -o line_detect.out main.o -lpng
 
@@ -210,16 +219,17 @@ int main()
     mag_img.version = PNG_IMAGE_VERSION;
 
     #endif // _DEBUG
-    
-    if(png_image_begin_read_from_file(&img, "images/pedestrian.png"))
+
+    if(png_image_begin_read_from_file(&img, argc > 1  && file_exist(argv[1]) ? argv[1] : "images/pedestrian.png" ))
     {
         img.format = PNG_FORMAT_GRAY;
-        
+
         png_bytep buffer;
         size_t buffer_size = PNG_IMAGE_SIZE( img );
         buffer = (unsigned char*)malloc( buffer_size );
 
         #ifdef _DEBUG
+        
         out.format = PNG_FORMAT_GRAY;
         out.format = img.format;
         out.width = img.width;
